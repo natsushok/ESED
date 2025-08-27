@@ -143,7 +143,7 @@ combined_plot <- plot_evolution / plot_totals + plot_layout(heights = c(2, 1))
 
 print(combined_plot)
 
-ggsave("funding_keywords_total_social.png", width = 10, height = 5, scale = 1)
+#ggsave("funding_keywords_total_social.png", width = 10, height = 5, scale = 1)
 
 # Calcular el porcentaje promedio que Social representa del Total Funding para cada keyword (2008-2024)
 social_share <- summary %>%

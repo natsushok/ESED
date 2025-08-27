@@ -386,6 +386,3 @@ keyword_domain_tot <- ggplot(domain_keywords, aes(x = reorder(Domain, -Count), y
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 print(keyword_domain_tot)
-
-# Remove NAS from all plots,
-# Make the domain for topics.
