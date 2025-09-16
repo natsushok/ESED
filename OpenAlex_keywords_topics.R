@@ -159,7 +159,7 @@ list_topics <- c("t13252", "t11077", "t11629", "t11389")
 #keywords_df <- kw_dataset_sum(list_keywords)
 #readr::write_csv(keywords_df, "keywords_df.csv")
 
-keywords_df <- read_csv("keywords_df.csv")
+keywords_df <- read_csv("data/OpenAlex/keywords_df.csv")
 
 # Pivot keywords table to long format
 keywords_df <- keywords_df %>%
@@ -208,9 +208,24 @@ keywords_df <- keywords_df %>%
 #topics_df <- topics_dataset_sum(list_topics)
 #readr::write_csv(topics_df, "topics_df.csv")
 
-topics_df <- read_csv("topics_df.csv")
+topics_df <- read_csv("data/OpenAlex/topics_df.csv")
 
 # Pivot topics table to long format
+# topics_df <- topics_df %>%
+#   rename(Year = publication_year, Domain = domain) %>%
+#   pivot_longer(
+#     cols     = -c(Year, Domain),
+#     names_to = "Topic",
+#     values_to= "Count"
+#   ) %>%
+#   # Replace topic codes with descriptive labels
+#   mutate(Topic = recode(Topic,
+#     t13252 = "Sex and Gender in Healthcare (t13252)",
+#     t11077 = "Sex Determination and Differentiation in Organisms (t11077)",
+#     t11629 = "Birth, Development, and Health (t11629)",
+#     t11389 = "Maternal and fetal healthcare (t11389)"
+#   ))
+
 topics_df <- topics_df %>%
   rename(Year = publication_year, Domain = domain) %>%
   pivot_longer(
@@ -220,27 +235,44 @@ topics_df <- topics_df %>%
   ) %>%
   # Replace topic codes with descriptive labels
   mutate(Topic = recode(Topic,
-    t13252 = "Sex and Gender in Healthcare (t13252)",
-    t11077 = "Sex Determination and Differentiation in Organisms (t11077)",
-    t11629 = "Birth, Development, and Health (t11629)",
-    t11389 = "Maternal and fetal healthcare (t11389)"
+    t13252 = "Sexo y género en la atención en salud (t13252)",
+    t11077 = "Determinación y diferenciación sexual en organismos (t11077)",
+    t11629 = "Nacimiento, desarrollo y salud (t11629)",
+    t11389 = "Atención en salud maternal y fetal (t11389)"
   ))
 
 # PLOTS ------------------------------------------------------------------------
 
 # Summarize total counts per year and keyword, omitting NAs in Count
+# keyword_year <- keywords_df %>%
+#   filter(Year >= 1975,
+#          Year <= 2022) |> 
+#   group_by(Year, Keyword) %>%
+#   summarize(Count = sum(Count, na.rm = TRUE), .groups = "drop") |> 
+#   mutate(Keyword = case_when(Keyword == "Developmental Origins of Health and Disease" ~ 
+#                                "Developmental Origins \nof Health and Disease",
+#                              Keyword == "sex dependent gene expression" ~
+#                                "sex dependent \ngene expression",
+#                              Keyword == "sex as a biological variable" ~
+#                                "sex as a biological \nvariable",
+#                              TRUE ~ Keyword)) |> 
+#   mutate(Keyword = fct_reorder(Keyword, Count, .fun = sum, .desc = TRUE))
+
 keyword_year <- keywords_df %>%
   filter(Year >= 1975,
          Year <= 2022) |> 
   group_by(Year, Keyword) %>%
   summarize(Count = sum(Count, na.rm = TRUE), .groups = "drop") |> 
-  mutate(Keyword = case_when(Keyword == "Developmental Origins of Health and Disease" ~ 
-                               "Developmental Origins \nof Health and Disease",
-                             Keyword == "sex dependent gene expression" ~
-                               "sex dependent \ngene expression",
-                             Keyword == "sex as a biological variable" ~
-                               "sex as a biological \nvariable",
-                             TRUE ~ Keyword)) |> 
+  mutate(Keyword = case_when(Keyword == "genomic" ~ "genómica",
+                             Keyword == "sex difference" ~ "diferencia sexual",
+                             Keyword == "maternal fetal effects" ~ "efectos materno-fetales",
+                             Keyword == "social genomics" ~ "genómica social",
+                             Keyword == "sex as a biological variable" ~ "sexo como variable biológica",
+                             Keyword == "maternal imprint" ~ "impresión materna",
+                             Keyword == "sex dependent gene expression" ~ "expresión génica \ndependiente del sexo",
+                             Keyword == "sex based biology" ~ "biología basada en el sexo",
+                             Keyword == "Developmental Origins of Health and Disease" ~ "orígenes del desarrollo de \nla salud y la enfermedad",
+                             Keyword == "sex specific heritability" ~ "herencia sexo específica")) |> 
   mutate(Keyword = fct_reorder(Keyword, Count, .fun = sum, .desc = TRUE))
 
 # Plot evolution of keyword usage over time, faceted by keyword with free scales
@@ -263,13 +295,25 @@ ggsave("keyword_year_plot.png", width = 15, height = 5, scale = 0.8)
 # ------------------------------------------------------------------------------
 
 # Summarize total counts per year and topic
+# topic_year <- topics_df %>%
+#   filter(Year >= 1975,
+#          Year <= 2022) |> 
+#   group_by(Year, Topic) %>%
+#   summarize(Count = sum(Count, na.rm = TRUE), .groups = "drop") %>%
+#   mutate(Topic = case_when(Topic == "Sex Determination and Differentiation in Organisms (t11077)" ~
+#                              "Sex Determination and Differentiation \nin Organisms (t11077)",
+#                            TRUE ~ Topic)) |> 
+#   mutate(Topic = fct_reorder(Topic, Count, .fun = sum, .desc = TRUE))
+
 topic_year <- topics_df %>%
   filter(Year >= 1975,
          Year <= 2022) |> 
   group_by(Year, Topic) %>%
   summarize(Count = sum(Count, na.rm = TRUE), .groups = "drop") %>%
-  mutate(Topic = case_when(Topic == "Sex Determination and Differentiation in Organisms (t11077)" ~
-                             "Sex Determination and Differentiation \nin Organisms (t11077)",
+  mutate(Topic = case_when(Topic == "Determinación y diferenciación sexual en organismos (t11077)" ~
+                             "Determinación y diferenciación sexual \nen organismos (t11077)",
+                           Topic == "Sexo y género en la atención en salud (t13252)" ~
+                             "Sexo y género en la atención \nen salud (t13252)",
                            TRUE ~ Topic)) |> 
   mutate(Topic = fct_reorder(Topic, Count, .fun = sum, .desc = TRUE))
 
@@ -293,17 +337,48 @@ ggsave("topic_year_plot.png", width = 15, height = 5, scale = 0.8)
 # ------------------------------------------------------------------------------
 
 # Evolution of keyword usage by domain
+# keyword_domain <- keywords_df %>%
+#   filter(Year >= 1975,
+#          Year <= 2022) |> 
+#   filter(!is.na(Domain)) |> 
+#   mutate(Keyword = case_when(Keyword == "Developmental Origins of Health and Disease" ~ 
+#                                "Developmental Origins \nof Health and Disease",
+#                              Keyword == "sex dependent gene expression" ~
+#                                "sex dependent \ngene expression",
+#                              Keyword == "sex as a biological variable" ~
+#                                "sex as a biological \nvariable",
+#                              TRUE ~ Keyword)) |> 
+#   mutate(Campo = case_when(Domain == "Health Sciences" ~ "Ciencias de la Salud",
+#                            Domain == "Life Sciences" ~ "Ciencias de la Vida",
+#                            Domain == "Physical Sciences" ~ "Ciencias Físicas",
+#                            Domain == "Social Sciences" ~ "Ciencias Sociales")) |> 
+#   mutate(Keyword = fct_reorder(Keyword, Count, .fun = sum, .na_rm = TRUE, .desc = TRUE)) 
+# 
+# keyword_domain_plot <- ggplot(keyword_domain, aes(x = Year, y = Count, color = Campo)) +
+#   geom_line(linewidth = 0.5) +
+#   theme_minimal() +
+#   labs(
+#     title = "Evolución del uso de palabras clave según área del conocimiento",
+#     x = "Año",
+#     y = "Cantidad de documentos"
+#   ) +
+#   facet_wrap(~Keyword, scales = "free_y", nrow = 2) +
+#   theme(legend.position = "bottom")
+
 keyword_domain <- keywords_df %>%
   filter(Year >= 1975,
          Year <= 2022) |> 
   filter(!is.na(Domain)) |> 
-  mutate(Keyword = case_when(Keyword == "Developmental Origins of Health and Disease" ~ 
-                               "Developmental Origins \nof Health and Disease",
-                             Keyword == "sex dependent gene expression" ~
-                               "sex dependent \ngene expression",
-                             Keyword == "sex as a biological variable" ~
-                               "sex as a biological \nvariable",
-                             TRUE ~ Keyword)) |> 
+  mutate(Keyword = case_when(Keyword == "genomic" ~ "genómica",
+                             Keyword == "sex difference" ~ "diferencia sexual",
+                             Keyword == "maternal fetal effects" ~ "efectos materno-fetales",
+                             Keyword == "social genomics" ~ "genómica social",
+                             Keyword == "sex as a biological variable" ~ "sexo como variable biológica",
+                             Keyword == "maternal imprint" ~ "impresión materna",
+                             Keyword == "sex dependent gene expression" ~ "expresión génica \ndependiente del sexo",
+                             Keyword == "sex based biology" ~ "biología basada en el sexo",
+                             Keyword == "Developmental Origins of Health and Disease" ~ "orígenes del desarrollo de \nla salud y la enfermedad",
+                             Keyword == "sex specific heritability" ~ "herencia sexo específica")) |> 
   mutate(Campo = case_when(Domain == "Health Sciences" ~ "Ciencias de la Salud",
                            Domain == "Life Sciences" ~ "Ciencias de la Vida",
                            Domain == "Physical Sciences" ~ "Ciencias Físicas",
@@ -328,12 +403,27 @@ ggsave("keyword_domain_plot.png", width = 15, height = 5, scale = 0.8)
 # ------------------------------------------------------------------------------
 
 # Evolution of topic usage by domain
+# topic_domain <- topics_df %>%
+#   filter(Year >= 1975,
+#          Year <= 2022) |> 
+#   filter(!is.na(Domain)) |> 
+#   mutate(Topic = case_when(Topic == "Sex Determination and Differentiation in Organisms (t11077)" ~
+#                              "Sex Determination and Differentiation \nin Organisms (t11077)",
+#                            TRUE ~ Topic)) |> 
+#   mutate(Campo = case_when(Domain == "Health Sciences" ~ "Ciencias de la Salud",
+#                            Domain == "Life Sciences" ~ "Ciencias de la Vida",
+#                            Domain == "Physical Sciences" ~ "Ciencias Físicas",
+#                            Domain == "Social Sciences" ~ "Ciencias Sociales")) |> 
+#   mutate(Topic = fct_reorder(Topic, Count, .fun = sum, .na_rm = TRUE, .desc = TRUE))
+
 topic_domain <- topics_df %>%
   filter(Year >= 1975,
          Year <= 2022) |> 
   filter(!is.na(Domain)) |> 
-  mutate(Topic = case_when(Topic == "Sex Determination and Differentiation in Organisms (t11077)" ~
-                             "Sex Determination and Differentiation \nin Organisms (t11077)",
+  mutate(Topic = case_when(Topic == "Determinación y diferenciación sexual en organismos (t11077)" ~
+                             "Determinación y diferenciación sexual \nen organismos (t11077)",
+                           Topic == "Sexo y género en la atención en salud (t13252)" ~
+                             "Sexo y género en la atención \nen salud (t13252)",
                            TRUE ~ Topic)) |> 
   mutate(Campo = case_when(Domain == "Health Sciences" ~ "Ciencias de la Salud",
                            Domain == "Life Sciences" ~ "Ciencias de la Vida",
