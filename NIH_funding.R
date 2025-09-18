@@ -2,20 +2,20 @@ library(tidyverse)
 library(ggplot2)
 library(patchwork)
 
-genomic_total <- read_csv("NIH RePORT/genomic_total.csv")
-genomic_social <- read_csv("NIH RePORT/genomic_social.csv")
+genomic_total <- read_csv("data/NIH RePORT/genomic_total.csv")
+genomic_social <- read_csv("data/NIH RePORT/genomic_social.csv")
 
-sex_difference_total <- read_csv("NIH RePORT/sex_difference_total.csv")
-sex_difference_social <- read_csv("NIH RePORT/sex_difference_social.csv")
+sex_difference_total <- read_csv("data/NIH RePORT/sex_difference_total.csv")
+sex_difference_social <- read_csv("data/NIH RePORT/sex_difference_social.csv")
 
-maternal_fetal_total <- read_csv("NIH RePORT/maternal_fetal_total.csv")
-maternal_fetal_social <- read_csv("NIH RePORT/maternal_fetal_social.csv")
+maternal_fetal_total <- read_csv("data/NIH RePORT/maternal_fetal_total.csv")
+maternal_fetal_social <- read_csv("data/NIH RePORT/maternal_fetal_social.csv")
 
-social_genomic_total <- read_csv("NIH RePORT/social_genomic_total.csv")
-social_genomic_social <- read_csv("NIH RePORT/social_genomic_social.csv")
+social_genomic_total <- read_csv("data/NIH RePORT/social_genomic_total.csv")
+social_genomic_social <- read_csv("data/NIH RePORT/social_genomic_social.csv")
 
-sabv_total <- read_csv("NIH RePORT/SABV_total.csv")
-sabv_social <- read_csv("NIH RePORT/SABV_social.csv")
+sabv_total <- read_csv("data/NIH RePORT/SABV_total.csv")
+sabv_social <- read_csv("data/NIH RePORT/SABV_social.csv")
 
 genomic_total <- genomic_total %>%
   rename(Year = `Fiscal Year`, Funding = `Total Funding`) %>%
@@ -93,6 +93,13 @@ summary <- bind_rows(
 summary <- summary %>%
   mutate(Funding_USD = as.numeric(gsub("[$,]", "", Funding)))
 
+summary <- summary |> 
+  mutate(Keyword = case_when(Keyword == "genomic" ~ "genómica",
+                   Keyword == "sex difference" ~ "diferencia sexual",
+                   Keyword == "maternal fetal" ~ "materno fetal",
+                   Keyword == "social genomic" ~ "sociogenómica",
+                   Keyword == "SABV" ~ "SABV"))
+
 # Ordenar las keywords por el total de funding (Year == "Total") en orden decreciente
 keyword_order <- summary %>%
   filter(Year == "Total", Group == "Total") %>%
@@ -143,7 +150,7 @@ combined_plot <- plot_evolution / plot_totals + plot_layout(heights = c(2, 1))
 
 print(combined_plot)
 
-#ggsave("funding_keywords_total_social.png", width = 10, height = 5, scale = 1)
+ggsave("funding_keywords_total_social.png", width = 10, height = 5, scale = 1)
 
 # Calcular el porcentaje promedio que Social representa del Total Funding para cada keyword (2008-2024)
 social_share <- summary %>%
